@@ -28,7 +28,7 @@ Cozy verze pro předmět Programovanie v Pythone.
 ### VS Code
 1. Open Folder -> shelfcraft
 2. Ctrl+` (terminal) -> pip install -r requirements.txt
-3. F5 nebo python src/main.py
+3. F5 nebo python src/main_physics.py
 
 ### Příkazová řádka
 ```
