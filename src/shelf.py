@@ -21,7 +21,6 @@ class ShelfSystem:
         for i in range(self.shelf_count):
             top = self.shelves_y[i] + self.thickness
             bottom = self.shelves_y[i+1]
-            # +2px запас для перфекционизма - чтобы влезла еще одна книга как на скрине
             self.police_rects.append(pygame.Rect(self.x+10, top-1, self.width-20, bottom-top+2))
 
     def draw(self, screen):
