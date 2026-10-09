@@ -1,4 +1,5 @@
 import pygame, pathlib, sys, random
+
 try:
     from book_physics import Book, PhantomBook, BookData
 except ModuleNotFoundError:
@@ -25,18 +26,21 @@ db_path = ROOT / "data" / "shelfcraft.db"
 db_path.parent.mkdir(exist_ok=True)
 
 placed_books: list[Book] = []
-current_data = BookData(title="New Book", width=28, height=110, color=(random.randint(180, 230), random.randint(160, 210), random.randint(120, 180)))
+current_data = BookData(title="New Book", width=28, height=110,
+                        color=(random.randint(180, 230), random.randint(160, 210), random.randint(120, 180)))
 drag_book = Book(current_data)
 phantom = PhantomBook(current_data)
 horizontal_mode = False
 
 GRAVITY = 2200
 
+
 def get_shelf_for_x(x):
     for idx, pr in enumerate(shelf_system.police_rects):
         if pr.x <= x <= pr.right:
             return idx, pr
     return -1, None
+
 
 def has_support_vertical(rect, shelf_idx, exclude=None):
     if shelf_idx is None or shelf_idx < 0:
@@ -57,6 +61,7 @@ def has_support_vertical(rect, shelf_idx, exclude=None):
             if overlap >= 10:
                 return True
     return False
+
 
 def has_support_horizontal(rect, shelf_idx, exclude=None):
     if shelf_idx is None or shelf_idx < 0:
@@ -80,15 +85,15 @@ def has_support_horizontal(rect, shelf_idx, exclude=None):
                 horizontal_supporters.append((b, br, overlap))
             else:
                 vertical_supporters.append((b, br, overlap))
-    
+
     if horizontal_supporters:
-        total_h = sum(ov for _,_,ov in horizontal_supporters)
-        if total_h >= 80: 
+        total_h = sum(ov for _, _, ov in horizontal_supporters)
+        if total_h >= 80:
             return True
-    
+
     if not vertical_supporters:
         return False
-    total = sum(ov for _,_,ov in vertical_supporters)
+    total = sum(ov for _, _, ov in vertical_supporters)
     cnt = len(vertical_supporters)
     if cnt >= 3:
         if cnt >= 4:
@@ -98,24 +103,31 @@ def has_support_horizontal(rect, shelf_idx, exclude=None):
         b1 = vertical_supporters[0][1]
         b2 = vertical_supporters[1][1]
         dist = abs(b1.x - b2.x)
-        if dist <= 35: 
+        if dist <= 35:
             return False
-        if 50 <= dist <= 90: 
+        if 50 <= dist <= 90:
             return True
     return False
+
 
 def has_support_physics(rect, shelf_idx, exclude=None):
     if rect.width == 112:
         return has_support_horizontal(rect, shelf_idx, exclude)
     else:
-        return has_support_vertical(rect, shelf_idx, exclude) or (shelf_idx is not None and abs(rect.bottom - shelf_system.police_rects[shelf_idx].bottom) <= 4)
+        return has_support_vertical(rect, shelf_idx, exclude) or (
+                    shelf_idx is not None and abs(rect.bottom - shelf_system.police_rects[shelf_idx].bottom) <= 4)
+
 
 def trigger_fall_check():
     changed = True
     while changed:
         changed = False
         for shelf_idx, pr in enumerate(shelf_system.police_rects):
-            books_on_shelf = [b for b in placed_books if getattr(b, 'shelf_id', -1) == shelf_idx and not getattr(b, 'is_falling', False) and not getattr(b, 'is_rotating', False)]
+            books_on_shelf = [b for b in placed_books if
+                              getattr(b, 'shelf_id', -1) == shelf_idx and not getattr(b, 'is_falling',
+                                                                                      False) and not getattr(b,
+                                                                                                             'is_rotating',
+                                                                                                             False)]
             books_on_shelf.sort(key=lambda b: b.get_rect().y, reverse=True)
             for b in books_on_shelf:
                 br = b.get_rect()
@@ -137,7 +149,7 @@ def trigger_fall_check():
                                     break
                         if has_h_support:
                             continue
-                    
+
                     b.is_falling = True
                     b.vy = 0
                     b.vx = 0
@@ -156,7 +168,7 @@ def trigger_fall_check():
                                 overlap = max(0, min(br.right, obr.right) - max(br.x, obr.x))
                                 if overlap > 5:
                                     verticals_below.append(ob)
-                        
+
                         if len(verticals_below) > 0:
                             b.original_horizontal = True
                             b.is_rotating = True
@@ -167,9 +179,13 @@ def trigger_fall_check():
                             b.is_rotating = False
                             b.original_horizontal = False
 
+
 def find_nearest_vertical_slot(x, shelf_idx, exclude=None):
     pr = shelf_system.police_rects[shelf_idx]
-    verticals = [b for b in placed_books if b != exclude and not getattr(b, 'is_falling', False) and not getattr(b, 'is_rotating', False) and getattr(b, 'shelf_id', -1) == shelf_idx and not b.data.horizontal]
+    verticals = [b for b in placed_books if
+                 b != exclude and not getattr(b, 'is_falling', False) and not getattr(b, 'is_rotating',
+                                                                                      False) and getattr(b, 'shelf_id',
+                                                                                                         -1) == shelf_idx and not b.data.horizontal]
     occupied_x = [b.get_rect().x for b in verticals]
     best_x = None
     best_dist = 9999
@@ -203,6 +219,7 @@ def find_nearest_vertical_slot(x, shelf_idx, exclude=None):
                     best_x = cand_x
     return best_x
 
+
 def check_overlap(rect, exclude=None):
     for b in placed_books:
         if b == exclude or getattr(b, 'is_falling', False) or getattr(b, 'is_rotating', False):
@@ -213,6 +230,7 @@ def check_overlap(rect, exclude=None):
                 if not (abs(b.get_rect().y - rect.bottom) <= 10 or abs(b.get_rect().bottom - rect.y) <= 10):
                     return True, b
     return False, None
+
 
 def update_physics(dt):
     trigger_fall_check()
@@ -250,7 +268,10 @@ def update_physics(dt):
                 continue
             pr = shelf_system.police_rects[b.shelf_id] if 0 <= b.shelf_id < len(shelf_system.police_rects) else None
             if pr:
-                has_verticals = any(not ob.data.horizontal for ob in placed_books if ob != b and getattr(ob, 'shelf_id', -1) == b.shelf_id and not getattr(ob, 'is_falling', False))
+                has_verticals = any(not ob.data.horizontal for ob in placed_books if
+                                    ob != b and getattr(ob, 'shelf_id', -1) == b.shelf_id and not getattr(ob,
+                                                                                                          'is_falling',
+                                                                                                          False))
                 if has_verticals:
                     vert_x = find_nearest_vertical_slot(b.data.x, b.shelf_id, exclude=b)
                     if vert_x is not None:
@@ -363,8 +384,11 @@ def update_physics(dt):
                         b.pivot_x = br.x
                         b.pivot_y = br.bottom
 
+
 def get_books_in_police(target):
-    return [b for b in placed_books if target.x <= b.get_rect().centerx <= target.right and target.y <= b.get_rect().centery <= target.bottom]
+    return [b for b in placed_books if
+            target.x <= b.get_rect().centerx <= target.right and target.y <= b.get_rect().centery <= target.bottom]
+
 
 def get_snap_position(mouse_x, mouse_y, w, h):
     target = None
@@ -395,7 +419,9 @@ def get_snap_position(mouse_x, mouse_y, w, h):
             snap_x = tr.x + slot_index * slot_w
             snap_y = tr.y - h
             for _ in range(4):
-                occupied = any(abs(b.get_rect().x - snap_x) <= 1 and abs(b.get_rect().y - snap_y) <= 1 for b in books_in_police if b != tb)
+                occupied = any(
+                    abs(b.get_rect().x - snap_x) <= 1 and abs(b.get_rect().y - snap_y) <= 1 for b in books_in_police if
+                    b != tb)
                 if not occupied:
                     break
                 slot_index = (slot_index + 1) % 4
@@ -483,6 +509,7 @@ def get_snap_position(mouse_x, mouse_y, w, h):
     snap_x = max(px1, min(px2 - w, snap_x))
     return snap_x, snap_y, True, target
 
+
 def has_support(rect, target):
     if abs(rect.bottom - target.bottom) <= 1:
         return True
@@ -504,7 +531,7 @@ def has_support(rect, target):
     total_overlap = sum(ov for _, ov in supporters)
     count_supporters = len(supporters)
     if rect.width == 112:
-        if horizontal_supporters and sum(ov for _,ov in horizontal_supporters) >= 80:
+        if horizontal_supporters and sum(ov for _, ov in horizontal_supporters) >= 80:
             return True
         if len(vertical_supporters) >= 3:
             return total_overlap >= 56 or count_supporters >= 3
@@ -519,7 +546,7 @@ def has_support(rect, target):
                         verts.append(br)
             if len(verts) == 2:
                 dist = abs(verts[0].x - verts[1].x)
-                if dist <= 35: 
+                if dist <= 35:
                     return False
                 if 50 <= dist <= 90:
                     return True
@@ -527,10 +554,12 @@ def has_support(rect, target):
     else:
         return total_overlap >= 10
 
+
 def check_valid(rect, target):
     if target is None:
         return False
-    if not (target.x - 2 <= rect.x and rect.right <= target.right + 2 and target.y - 2 <= rect.y and rect.bottom <= target.bottom + 2):
+    if not (
+            target.x - 2 <= rect.x and rect.right <= target.right + 2 and target.y - 2 <= rect.y and rect.bottom <= target.bottom + 2):
         return False
     for b in placed_books:
         br = b.get_rect()
@@ -547,6 +576,7 @@ def check_valid(rect, target):
     if not has_support(rect, target):
         return False
     return True
+
 
 running = True
 while running:
@@ -583,7 +613,9 @@ while running:
                     if getattr(b, 'is_falling', False) or getattr(b, 'is_rotating', False):
                         continue
                     r = b.get_rect()
-                    session.add(BookModel(project_name="mvp", title=b.data.title, x=r.x, y=r.y, width=r.width, height=r.height, rotation=0, horizontal=b.data.horizontal))
+                    session.add(
+                        BookModel(project_name="mvp", title=b.data.title, x=r.x, y=r.y, width=r.width, height=r.height,
+                                  rotation=0, horizontal=b.data.horizontal))
                 session.commit()
                 session.close()
             if event.key == pygame.K_l:
@@ -591,7 +623,8 @@ while running:
                 rows = session.query(BookModel).filter_by(project_name="mvp").all()
                 placed_books.clear()
                 for row in rows:
-                    d = BookData(title=row.title, width=row.width, height=row.height, x=row.x, y=row.y, rotation=0, horizontal=row.horizontal)
+                    d = BookData(title=row.title, width=row.width, height=row.height, x=row.x, y=row.y, rotation=0,
+                                 horizontal=row.horizontal)
                     nb = Book(d)
                     for idx, pr in enumerate(shelf_system.police_rects):
                         if pr.x <= d.x <= pr.right:
@@ -603,9 +636,11 @@ while running:
             if event.button == 1:
                 rect = phantom.get_rect()
                 if has_police and check_valid(rect, target_police):
-                    new_data = BookData(title=drag_book.data.title, width=28, height=112, color=drag_book.data.color, x=rect.x, y=rect.y, rotation=0, horizontal=horizontal_mode)
+                    new_data = BookData(title=drag_book.data.title, width=28, height=112, color=drag_book.data.color,
+                                        x=rect.x, y=rect.y, rotation=0, horizontal=horizontal_mode)
                     nb = Book(new_data)
-                    nb.shelf_id = shelf_system.police_rects.index(target_police) if target_police in shelf_system.police_rects else 0
+                    nb.shelf_id = shelf_system.police_rects.index(
+                        target_police) if target_police in shelf_system.police_rects else 0
                     placed_books.append(nb)
                     current_data.color = (random.randint(180, 230), random.randint(160, 210), random.randint(120, 180))
             elif event.button == 3:
@@ -631,8 +666,12 @@ while running:
         b.draw(screen)
     valid = has_police and check_valid(phantom.get_rect(), target_police)
     phantom.draw(screen, is_valid=valid)
-    screen.blit(font.render(f"[Q]H [E]V | Книг: {len(placed_books)} | Оранж->Синяя с переворотом | Падают: {len([b for b in placed_books if b.is_falling or b.is_rotating])}", True, (60,50,30)), (10, H-50))
-    screen.blit(font.render(f"Не застревает в текстуре - скользит к свободному слоту | ПКМ забрать", True, (60,50,30)), (10, H-30))
+    screen.blit(font.render(
+        f"[Q]H [E]V | Книг: {len(placed_books)} | Оранж->Синяя с переворотом | Падают: {len([b for b in placed_books if b.is_falling or b.is_rotating])}",
+        True, (60, 50, 30)), (10, H - 50))
+    screen.blit(
+        font.render(f"Не застревает в текстуре - скользит к свободному слоту | ПКМ забрать", True, (60, 50, 30)),
+        (10, H - 30))
     pygame.display.flip()
 pygame.quit()
 sys.exit()

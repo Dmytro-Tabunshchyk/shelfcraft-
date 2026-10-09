@@ -47,24 +47,20 @@ class Book:
     def draw(self, screen: pygame.Surface, alpha=255):
         rect = self.get_rect()
         r,g,b = self.data.color
-        
         if self.is_rotating and self.original_horizontal:
             prog = max(0.0, min(1.0, self.rotation_progress))
-            angle = prog * 90 
+            angle = prog * 90
             surf = pygame.Surface((112, 28), pygame.SRCALPHA)
             surf.fill((r,g,b))
             pygame.draw.rect(surf, (0,0,0), (0,0,112,28), 1)
-            
             rotated = pygame.transform.rotate(surf, -angle)
             rot_rect = rotated.get_rect(center=rect.center)
             screen.blit(rotated, rot_rect)
-            pass
         else:
             pygame.draw.rect(screen, (r,g,b), rect)
             pygame.draw.rect(screen, (0,0,0), rect, 1)
             if not self.data.horizontal:
                 pygame.draw.line(screen, (0,0,0), (rect.x+5, rect.y), (rect.x+5, rect.bottom), 1)
-            pass
 
 class PhantomBook(Book):
     def draw(self, screen, is_valid: bool):
