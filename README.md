@@ -33,7 +33,7 @@ Cozy verze pro předmět Programovanie v Pythone.
 ### Příkazová řádka
 ```
 pip install -r requirements.txt
-python src/main.py
+python src/main_physics.py
 ```
 
 ## Ovládání v prototypu
