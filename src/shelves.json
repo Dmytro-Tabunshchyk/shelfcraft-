@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Billy 80x202 - v3.2 TALL",
+    "x": 300,
+    "y": 15,
+    "width": 700,
+    "height": 660,
+    "shelves": 4,
+    "shelf_thickness": 10
+  },
+  {
+    "name": "Kallax 4x4",
+    "x": 400,
+    "y": 50,
+    "width": 600,
+    "height": 600,
+    "shelves": 4,
+    "shelf_thickness": 15
+  }
+]

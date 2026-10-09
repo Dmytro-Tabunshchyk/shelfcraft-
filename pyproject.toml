@@ -1,0 +1,10 @@
+[project]
+name = "shelfcraft"
+version = "0.1.0"
+description = "ShelfCraft - Python version of Unity bookshelf designer"
+requires-python = ">=3.10"
+dependencies = ["pygame==2.5.2", "Pillow==10.4.0", "SQLAlchemy==2.0.32"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
